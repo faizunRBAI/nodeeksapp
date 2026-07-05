@@ -68,22 +68,13 @@ provider "kubernetes" {
 
 #  ECR 
 
-resource "aws_ecr_repository" "app" {
-  name                 = "${var.project_name}-app"
-  image_tag_mutability = "MUTABLE"
-  force_delete         = true
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-
-  tags = {
-    Project = var.project_name
-  }
+# Use existing ECR repository (already present in the account)
+data "aws_ecr_repository" "app" {
+  name = "${var.project_name}-app"
 }
 
 output "ecr_repository_url" {
-  value = aws_ecr_repository.app.repository_url
+  value = data.aws_ecr_repository.app.repository_url
 }
 
 #  VPC 
@@ -350,7 +341,7 @@ resource "aws_security_group_rule" "rds_ingress_from_eks" {
 resource "aws_eks_cluster" "main" {
   name     = var.project_name
   role_arn = aws_iam_role.eks_cluster.arn
-  version  = "1.29"
+  version  = "1.32"
 
   vpc_config {
     subnet_ids              = concat(aws_subnet.public[*].id, aws_subnet.private[*].id)
